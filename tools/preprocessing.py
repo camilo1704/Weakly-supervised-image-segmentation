@@ -95,4 +95,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     generate_classification_model_input(args.dataset_path, args.processed_dataset_path)
-"/home/cuchuflito/Documents/repos/Weakly-supervised-image-segmentation/dataset/archive/Grapes/Grapes/PinotNoir"
