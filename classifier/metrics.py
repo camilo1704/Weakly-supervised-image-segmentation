@@ -1,8 +1,10 @@
 """
-Code from https://albumentations.ai/docs/examples/pytorch_classification/
+Code take and modified from https://albumentations.ai/docs/examples/pytorch_classification/
 """
 import torch
 from collections import defaultdict
+import json
+from os.path import join
 
 def calculate_accuracy(output, target):
     output = torch.sigmoid(output) >= 0.5
@@ -10,8 +12,9 @@ def calculate_accuracy(output, target):
     return torch.true_divide((target == output).sum(dim=0), output.size(0)).item()
 
 class MetricMonitor:
-    def __init__(self, float_precision=3):
+    def __init__(self, save_path, float_precision=3):
         self.float_precision = float_precision
+        self.save_path = save_path
         self.reset()
 
     def reset(self):
@@ -23,7 +26,6 @@ class MetricMonitor:
         metric["val"] += val
         metric["count"] += 1
         metric["avg"] = metric["val"] / metric["count"]
-
     def __str__(self):
         return " | ".join(
             [
@@ -33,4 +35,9 @@ class MetricMonitor:
                 for (metric_name, metric) in self.metrics.items()
             ]
         )
+    def save_metric(self, epoch):
+        for (metric_name, metric) in self.metrics.items():
+            with open(self.save_path+"_"+metric_name+".json", 'a') as fp:
+                fp.write(f'{metric["avg"]}\n')
+
 
