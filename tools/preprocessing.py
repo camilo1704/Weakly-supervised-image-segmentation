@@ -6,10 +6,12 @@ from os import listdir
 from PIL.Image import Image as PIL_image
 
 def generate_classification_model_input(dataset_root_path:Text, processed_dataset_path:Text, img_size:int=256):
-
+    """
+    Starting from a dataset woth a yolo format, crop images to train a classificator model.
+    The class of this binary dataset fir append to the cropped image's name.
+    """
     set_names = ["train", "val", "test"]
     for set_name in set_names:
-
         set_root_path = join(dataset_root_path, set_name)
         set_images = read_files_in_folder(join(set_root_path, "images"))
         for image_path in set_images:
@@ -19,8 +21,12 @@ def generate_classification_model_input(dataset_root_path:Text, processed_datase
 
     
 
-def crop_and_save_images(pil_img:PIL_image, bboxes_coords:List, save_path:Text, save_name:Text,  img_size:int):
-     
+def crop_and_save_images(pil_img:PIL_image, bboxes_coords:List, save_path:Text, save_name:Text, img_size:int):
+    """
+    Crops and save img of size (img_size,img_size) and adds a 0 or 1
+    at the end of the images name if the overlap between the bbox 
+    containing the object is mora than 5%.
+    """
      h,w = pil_img.size
      h_steps = h//img_size
      w_steps = w//img_size
@@ -58,18 +64,25 @@ def calculate_overlapped_area(bbox1, bbox2):
 
 
 def read_image_label(img_path:Text)->Tuple:
+    """
+    Reads imageand label from an image path.
+    It expects a yolo format.
+    """
     pil_img = Image.open(img_path).convert('RGB')
     label_path = img_path.replace("jpg", "txt").replace("images", "labels")
     file = open(label_path, "r",encoding='utf8')
     bboxes = file.readlines()
     file.close()
+
     return pil_img, bboxes
 
 
 def process_yolo_bboxes(bboxes_arr:List, img_size:Tuple)->np.ndarray:
+    """
+    Convers a yolo bbox format to pascal voc format. 
+    """
     bbox = bboxes_arr.replace("\n","").split(" ")
     x_l, y_l = img_size
-    
     x_center = float(bbox[1])*x_l
     y_center = float(bbox[2])*y_l
     r_x = x_l*float(bbox[3])/(2)
@@ -78,9 +91,13 @@ def process_yolo_bboxes(bboxes_arr:List, img_size:Tuple)->np.ndarray:
     y_min = int(y_center-r_y)
     x_max = int(x_center+r_x)
     y_max = int(y_center+r_y)
+
     return [ max(0, x_min), max(0,y_min), min(x_max,x_l), min(y_max, y_l)]
 
 def read_files_in_folder(folder_path:Text)->List:
+        """
+        Returns all files in folder.
+        """
         folder_files = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
         return folder_files
 
