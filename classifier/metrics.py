@@ -26,6 +26,8 @@ class MetricMonitor:
         metric["val"] += val
         metric["count"] += 1
         metric["avg"] = metric["val"] / metric["count"]
+    def get_acc(self):
+        return self.metrics["Accuracy"]["avg"]
     def __str__(self):
         return " | ".join(
             [

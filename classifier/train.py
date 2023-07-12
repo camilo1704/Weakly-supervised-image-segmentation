@@ -22,7 +22,9 @@ def get_dataloaders(dataset_root_path:Text, batch_size:int)->Dict:
     dataloaders = {}
     train_transform = A.Compose(
     [   A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5),
-        A.RandomBrightnessContrast(p=0.5),
+        A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2,p=0.5),
+        A.Sharpen(alpha=(0.1, 0.2), lightness=(0.1, 1.0),p=0.5),
+        A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=0.5),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2(),
     ])
@@ -44,9 +46,10 @@ def train_model(dataloaders:Dict, params:Dict):
     model = model.to(params.device)
     criterion = nn.BCEWithLogitsLoss().to(params.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=params.lr)
+    best_acc = 0
     for epoch in range(1, params.epochs + 1):
         train(dataloaders["train"], model, criterion, optimizer, epoch, params)
-        validate(dataloaders["val"], model, criterion, epoch, params,save_best=True)
+        best_acc=validate(dataloaders["val"], model, criterion, epoch, params,save_best=True, best_accuracy=best_acc)
 
 
 def train(train_loader, model, criterion, optimizer, epoch, params):
@@ -70,11 +73,11 @@ def train(train_loader, model, criterion, optimizer, epoch, params):
         )
     metric_monitor.save_metric(epoch)
 
-def validate(val_loader, model, criterion, epoch, params, save_best:bool=False):
+def validate(val_loader, model, criterion, epoch, params, save_best:bool=False, best_accuracy:float=0):
     metric_monitor = MetricMonitor(join(params.save_run_path, "metrics", "val"))
     model.eval()
     stream = tqdm(val_loader)
-    best_accuracy=0
+    
     with torch.no_grad():
         for i, (images, target) in enumerate(stream, start=1):
             images = images.to(params.device, non_blocking=True)
@@ -82,17 +85,21 @@ def validate(val_loader, model, criterion, epoch, params, save_best:bool=False):
             output = model(images)
             loss = criterion(output, target)
             accuracy = calculate_accuracy(output, target)
-            if accuracy>best_accuracy:
-                best_accuracy=accuracy
-                if save_best:
-                    torch.save(model.state_dict(), join(params.save_run_path, "model", "best_"+str(epoch)+".pt"))
+            
             metric_monitor.update("Loss", loss.item())
             metric_monitor.update("Accuracy", accuracy)
             
             stream.set_description(
                 "Epoch: {epoch}. Validation. {metric_monitor}".format(epoch=epoch, metric_monitor=metric_monitor)
             )
+        print(metric_monitor.get_acc())
+        if metric_monitor.get_acc()>best_accuracy:
+            print(metric_monitor.get_acc(), best_accuracy)
+            best_accuracy=metric_monitor.get_acc()
+            if save_best:
+                torch.save(model.state_dict(), join(params.save_run_path, "model", params.model+"_"+str(epoch)+".pt"))
         metric_monitor.save_metric(epoch)
+        return best_accuracy
 
 if __name__ == "__main__":
 
@@ -101,10 +108,10 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset_root_path", type=str, help="dataset root path")
     parser.add_argument("--img_size", default=256, type=int, help="cropped img size")
-    parser.add_argument("--model", default="resnet50", type=str, help="pretrained model name")
+    parser.add_argument("--model", default="vgg16", type=str, help="pretrained model name")
     parser.add_argument("--batch_size", default=32, type=int, help="batch size")
-    parser.add_argument("--epochs", default=50, type=int, help="training epochs")
-    parser.add_argument("--lr", default=0.001, type=float, help="lr")
+    parser.add_argument("--epochs", default=100, type=int, help="training epochs")
+    parser.add_argument("--lr", default=0.0001, type=float, help="lr")
     parser.add_argument("--num_workers", default=0, type=int, help="num workers")
     parser.add_argument("--device", default="cuda", type=str, help="device")
     parser.add_argument("--save_run_path", default="./runs", type=str, help="save path to training run files")
