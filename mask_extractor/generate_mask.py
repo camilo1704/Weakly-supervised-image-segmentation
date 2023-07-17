@@ -12,7 +12,7 @@ from torchcam.methods import SmoothGradCAMpp,CAM, GradCAM,LayerCAM
 from tools import read_files_in_folder
 from os.path import join
 
-CAM_threshold= 0.15
+CAM_threshold= 0.4
 
 def generate_masks(dataset_path:Text, segmentation_dataset_path:Text, model:models, layer_name:Text):
     """
@@ -24,10 +24,11 @@ def generate_masks(dataset_path:Text, segmentation_dataset_path:Text, model:mode
         set_files = read_files_in_folder(set_images_path)
         print(len(set_files))
         for image_path in set_files:
-            mask = get_CAM_mask(join(set_images_path, image_path), model, layer_name, CAM_threshold)
-            print(join(segmentation_dataset_path, set_name,"images", image_path))
-            Image.open(join(set_images_path, image_path)).save(join(segmentation_dataset_path, set_name,"images", image_path))
-            np.save(join(segmentation_dataset_path, set_name, "mask", image_path.split(".")[0]), mask)
+            if image_path.split(".")[0][-1]=="1":
+                mask = get_CAM_mask(join(set_images_path, image_path), model, layer_name, CAM_threshold)
+                print(join(segmentation_dataset_path, set_name,"images", image_path))
+                Image.open(join(set_images_path, image_path)).save(join(segmentation_dataset_path, set_name,"images", image_path))
+                np.save(join(segmentation_dataset_path, set_name, "mask", image_path.split(".")[0]), mask)
 
 
 def get_CAM_mask(img_path:Text, model:models, layer_name:Text, CAM_threshold:float)->np.ndarray:
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--segmentation_dataset_path", type=str, help="processed dataset path")
     parser.add_argument("--layer_name", type=str, default="features.denseblock4", help="output layer CAM")
     parser.add_argument("--model_name", type=str, default="densenet121", help="model used as CAM extractor")
-    parser.add_argument("--model_weights", type=str, default="/home/cuchuflito/Documents/repos/Weakly-supervised-image-segmentation/runs/2/model/densenet121_24.pt",  help="path to model weights")
+    parser.add_argument("--model_weights", type=str,  help="path to model weights")
 
     
     args = parser.parse_args()
