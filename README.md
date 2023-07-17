@@ -16,7 +16,7 @@ python ./classification_model/train.py --dataset_root_path
 ```
 with ```dataset_root_path``` the processed dataset path.
 
-To extract the masks from the classifier: ç
+To extract the masks from the classifier: 
 
 ```
 python ./mask_extractor/generate_mask.py --dataset_path --segmentation_dataset_path --model_weights
