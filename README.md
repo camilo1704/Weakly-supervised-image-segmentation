@@ -32,9 +32,8 @@ with ```dataset_path``` the path to the dataset with masks and ```run_files``` t
 
 ## Results
 
-| Input Image | GRADCAM mask | Segmentation model output |
+### Input Image     GRADCAM mask    Segmentation model output  
 
-| --- | --- | --- |
 
 | <img src="./imgs/001_img.png" alt="isolated" width="200"/> | <img src="./imgs/001_CAM.png" alt="isolated" width="200"/> | <img src="./imgs/001_segmentation.png" alt="isolated" width="200"/> |
 
