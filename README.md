@@ -1,5 +1,5 @@
 # Weakly-supervised-image-segmentation
-A classifier model is trained, then using a GRADCAM method is employed to extract masks used to train a segementation model. 
+A classification model is trained, then using a GRADCAM method is employed to extract masks used to train a segementation model. 
 The [Pinot Noir Grapes dataset](https://www.kaggle.com/datasets/nicolaasregnier/pinotnoirgrapes) with a yolov8 format is preprocessed to be used as example.
 ## Usage
 To preprocess the Pinot Noir Grapes dataset from the yolov8 format:
