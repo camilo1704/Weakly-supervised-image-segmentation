@@ -1,0 +1,6 @@
+PIL
+torchvision
+albumentations
+torchcam
+segmentation-models-pytorch
+pytorch-lightning==1.5.4
